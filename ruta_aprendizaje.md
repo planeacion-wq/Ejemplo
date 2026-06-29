@@ -70,6 +70,15 @@
 - [How I use AI as an Entrepreneur (My complete workflow)](https://youtu.be/FDEVzFsPrkU)
 - [Por qué AI no está funcionando en tu empresa](https://youtu.be/6z2pYdGxfTk) · _Platzi_
 
+### 2.5-bis Adoptar IA en empresas tradicionales (serie Alex Torrenegra)
+> Mini-ruta dedicada para llevar IA a una empresa que parte de cero. Sigue este
+> orden: primero el "por qué", luego el "cómo empezar", después la integración.
+- [La Inteligencia Artificial ya no es opcional para las empresas en Latinoamérica](https://youtu.be/1QpKjUfbnMc) · _Alex Torrenegra_ — _(el porqué; nivel básico)_
+- [Cómo empezar a implementar IA en una empresa tradicional sin perderse](https://youtu.be/6GHDHPGM4Ck) · _Alex Torrenegra_
+- [Cómo Adoptar Inteligencia Artificial en tu Empresa](https://youtu.be/G5N1grTzJkg) · _Alex Torrenegra_
+- [Cómo integrar IA en una empresa tradicional de sostenibilidad](https://youtu.be/J4C6JUNKRQ0) · _Alexander Torrenegra_ — _(caso aplicado)_
+- [DIRECTO: Presentación del Máster en IA Aplicada y Optimización de Procesos Productivos](https://www.youtube.com/live/dW8lTxXieQ8) — _(formación/orientación)_
+
 ### 2.6 Primer contacto con agentes y programación asistida
 - [Qué es un agente de AI](https://youtu.be/4bXNYw_dTeY) · _Platzi_
 - [Así se programa con AI en 2026](https://youtu.be/FyeHZH2jeOk) · _Platzi_
@@ -118,30 +127,18 @@
 
 ---
 
-## ⚠️ Pendientes — 5 títulos no recuperados
-
-Estos videos no aparecieron indexados en el buscador (probablemente subidas muy
-recientes o transmisiones en vivo). Ábrelos y dime el título para clasificarlos:
-
-| # | Enlace |
-|---|--------|
-| 34 | https://youtu.be/J4C6JUNKRQ0 |
-| 41 | https://www.youtube.com/live/dW8lTxXieQ8 (en vivo) |
-| 42 | https://youtu.be/6GHDHPGM4Ck |
-| 44 | https://youtu.be/1QpKjUfbnMc |
-| 51 | https://youtu.be/G5N1grTzJkg |
-
----
-
 ## 📊 Resumen
 
 | Nivel | Videos |
 |-------|--------|
-| 🟢 Básico | 22 |
-| 🟡 Intermedio | 21 |
+| 🟢 Básico | 24 |
+| 🟡 Intermedio | 24 |
 | 🔴 Avanzado | 5 |
-| ⚠️ Pendiente | 5 |
 | **Total** | **53** |
+
+_Los 53 títulos quedaron recuperados y clasificados (los 5 que faltaban se
+completaron manualmente: la serie de adopción de IA en empresas de Alex
+Torrenegra y la presentación del Máster)._
 
 **Orden sugerido:** 1.1 → 1.2 → 1.3 → 2.1 → 2.2 → 2.3 → 2.4 → 2.5 → 2.6 → 3.x,
 intercalando el *Track Paralelo* cuando quieras contexto.
