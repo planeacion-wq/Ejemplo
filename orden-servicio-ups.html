@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d3b66">
+<title>ODS UPS · Comercial Onix</title>
+<style>
+:root{
+  --onix:#0d3b66; --onix2:#1f6fb2; --bg:#eef2f6; --card:#fff; --line:#d4dde6;
+  --txt:#1b2733; --muted:#6b7a8a; --ok:#1b9c5d; --warn:#c97a04; --err:#d23b3b;
+  --okbg:#e6f6ee; --warnbg:#fdf3e0; --errbg:#fdeaea;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--txt);font-size:15px;line-height:1.4;padding-bottom:90px}
+header{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,var(--onix),var(--onix2));
+  color:#fff;padding:10px 14px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+header .row{display:flex;align-items:center;gap:10px}
+header .logo{background:#fff;color:var(--onix);font-weight:800;border-radius:8px;padding:4px 8px;font-size:13px;letter-spacing:.5px}
+header h1{font-size:15px;margin:0;font-weight:700}
+header small{opacity:.85;font-size:11px;display:block}
+.progress{height:5px;background:rgba(255,255,255,.25);border-radius:4px;margin-top:8px;overflow:hidden}
+.progress > i{display:block;height:100%;width:0;background:#8fe3b0;transition:width .3s}
+.wrap{max-width:760px;margin:0 auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:12px 0;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card > h2{margin:0;font-size:14px;background:#f5f8fb;color:var(--onix);padding:11px 14px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.card > h2 .ico{width:22px;height:22px;border-radius:6px;background:var(--onix);color:#fff;display:grid;place-items:center;font-size:12px;flex:none}
+.card > h2 .chev{margin-left:auto;transition:transform .2s;color:var(--muted)}
+.card.collapsed > .body{display:none}
+.card.collapsed > h2 .chev{transform:rotate(-90deg)}
+.body{padding:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid.g3{grid-template-columns:1fr 1fr 1fr}
+.full{grid-column:1/-1}
+@media(max-width:520px){.grid,.grid.g3{grid-template-columns:1fr 1fr}}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 3px}
+label .req{color:var(--err)}
+input,select,textarea{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:9px;font-size:15px;
+  background:#fff;color:var(--txt);font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--onix2);box-shadow:0 0 0 3px rgba(31,111,178,.12)}
+input[readonly]{background:#f1f4f7;color:#46566a}
+textarea{resize:vertical;min-height:64px}
+.field.bad input,.field.bad select,.field.bad textarea{border-color:var(--err);background:var(--errbg)}
+.field.warnf input,.field.warnf select,.field.warnf textarea{border-color:var(--warn);background:var(--warnbg)}
+.msg{font-size:11.5px;margin-top:3px;display:none}
+.field.bad .msg.err{display:block;color:var(--err)}
+.field.warnf .msg.warn{display:block;color:var(--warn)}
+.hint{font-size:11px;color:var(--muted);margin-top:3px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{flex:1 1 auto;min-width:84px;padding:9px 6px;border:1.5px solid var(--line);background:#fff;border-radius:9px;
+  font-size:13px;font-weight:600;color:var(--txt);cursor:pointer}
+.seg button.on{background:var(--onix);border-color:var(--onix);color:#fff}
+.checkrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.checkrow:last-child{border-bottom:none}
+.checkrow .lbl{flex:1;font-size:13.5px;font-weight:600}
+.yn{display:flex;gap:6px;flex:none}
+.yn button{width:46px;padding:7px 0;border:1.5px solid var(--line);background:#fff;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;color:var(--muted)}
+.yn button.si.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.yn button.no.on{background:var(--err);border-color:var(--err);color:#fff}
+.measure-head{font-size:11px;font-weight:700;color:var(--onix);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 4px}
+.equip-banner{background:#eaf4ff;border:1px solid #bcdcff;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:10px;display:none}
+.equip-banner.show{display:block}
+.equip-banner b{color:var(--onix)}
+canvas.sign{width:100%;height:130px;border:1.5px dashed var(--line);border-radius:9px;background:#fff;touch-action:none}
+.sign-actions{display:flex;gap:8px;margin-top:6px}
+.sign-actions button{font-size:12px;padding:6px 10px;border:1px solid var(--line);background:#fff;border-radius:7px;color:var(--muted);cursor:pointer}
+.footbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);
+  padding:10px 12px;display:flex;gap:8px;z-index:40;box-shadow:0 -2px 10px rgba(0,0,0,.08)}
+.footbar .status{flex:1;font-size:11.5px;color:var(--muted);align-self:center}
+.btn{padding:11px 14px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--onix);color:#fff}
+.btn.ghost{background:#eef2f6;color:var(--onix);border:1px solid var(--line)}
+.btn:active{transform:translateY(1px)}
+#validationBox{margin:12px 0;border-radius:12px;padding:12px 14px;font-size:13px;display:none}
+#validationBox.ok{background:var(--okbg);border:1px solid #bfe6cf;color:#0f6e41;display:block}
+#validationBox.has{background:var(--warnbg);border:1px solid #f0d9a8;color:#7a4d00;display:block}
+#validationBox ul{margin:8px 0 0;padding-left:18px}
+#validationBox li{margin:3px 0}
+#validationBox li.e{color:var(--err)}
+.toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(20px);background:#222d3a;color:#fff;
+  padding:10px 16px;border-radius:24px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:90%}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.print-only{display:none}
+/* ---------- PRINT / PDF ---------- */
+@media print{
+  body{background:#fff;padding:0;font-size:10px}
+  header,.footbar,.toast,#validationBox,.card>h2 .chev,.no-print{display:none!important}
+  .card.collapsed > .body{display:block!important}
+  .wrap{max-width:none;padding:0}
+  .card{border:1px solid #888;border-radius:0;margin:0 0 6px;box-shadow:none;break-inside:avoid}
+  .card>h2{background:#0d3b66;color:#fff;font-size:10px;padding:4px 8px}
+  .card>h2 .ico{display:none}
+  .body{padding:6px 8px}
+  input,select,textarea{border:none;border-bottom:1px solid #aaa;border-radius:0;padding:1px 2px;font-size:10px}
+  .print-only{display:block}
+  .seg button:not(.on),.yn button:not(.on){display:none}
+  .seg button.on,.yn button.on{border:1px solid #333;color:#000;background:#ddd}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <span class="logo">ONIX</span>
+    <div>
+      <h1>Orden de Servicio Técnico · UPS</h1>
+      <small>Comercial Onix SAS · NIT 816.000.111-1 · Diligenciamiento en campo</small>
+    </div>
+  </div>
+  <div class="progress"><i id="prog"></i></div>
+</header>
+
+<div class="wrap">
+
+  <!-- ====== EQUIPO / CLIENTE ====== -->
+  <div class="card" data-card>
+    <h2><span class="ico">1</span> Equipo y Cliente <span class="chev">▾</span></h2>
+    <div class="body">
+      <div class="field full">
+        <label>Seleccionar equipo del catálogo Buencafe <span class="req">*</span></label>
+        <select id="equipoSel">
+          <option value="">— Buscar y seleccionar UPS —</option>
+        </select>
+        <div class="hint">Al seleccionar se autocompletan marca, modelo, serie, activo, ODS y baterías. Reduce errores de digitación.</div>
+      </div>
+      <div class="equip-banner" id="equipBanner"></div>
+
+      <div class="measure-head">Cliente</div>
+      <div class="grid">
+        <div class="field"><label>ODS <span class="req">*</span></label><input id="ods" data-req></div>
+        <div class="field"><label>Fecha <span class="req">*</span></label><input id="fecha" type="date" data-req></div>
+        <div class="field"><label>Cliente</label><input id="cliente" value="Buencafe" readonly></div>
+        <div class="field"><label>Ciudad</label><input id="ciudad" value="Chinchiná"></div>
+        <div class="field full"><label>Dirección</label><input id="direccion" value="Cra 4ta # 16-50"></div>
+        <div class="field"><label>Contacto</label><input id="contacto" value="Sebastián Diaz"></div>
+        <div class="field"><label>Celular</label><input id="celular" type="tel" inputmode="numeric"
+          data-rule="tel"><div class="msg err">Debe tener 7 a 10 dígitos.</div></div>
+      </div>
+
+      <div class="measure-head">Información del equipo</div>
+      <div class="grid">
+        <div class="field"><label>Marca</label><input id="marca" readonly></div>
+        <div class="field"><label>Modelo</label><input id="modelo" readonly></div>
+        <div class="field"><label>Capacidad (kVA)</label><input id="capacidad" readonly></div>
+        <div class="field"><label>Serie</label><input id="serie" readonly></div>
+        <div class="field full"><label>Ubicación</label><input id="ubicacion" readonly></div>
+        <div class="field"><label>Tensión nominal IN (V)</label><input id="tnomIn" type="number" inputmode="decimal" value="220"></div>
+        <div class="field"><label>Tensión nominal OUT (V)</label><input id="tnomOut" type="number" inputmode="decimal" value="220"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== BATERÍAS ====== -->
+  <div class="card collapsed" data-card>
+    <h2><span class="ico">2</span> Baterías <span class="chev">▾</span></h2>
+    <div class="body">
+      <div class="measure-head">Internas</div>
+      <div class="grid">
+        <div class="field"><label>Marca</label><input id="batMarca"></div>
+        <div class="field"><label>V/Ah</label><input id="batVah" placeholder="12/7"></div>
+        <div class="field"><label>Cantidad</label><input id="batCant" type="number" inputmode="numeric"></div>
+        <div class="field"><label>Año</label><input id="batAno"></div>
+        <div class="field full"><label>Notas</label><input id="batNotas"></div>
+      </div>
+      <div class="measure-head">Externas</div>
+      <div class="grid">
+        <div class="field"><label>Marca</label><input id="batMarca2"></div>
+        <div class="field"><label>V/Ah</label><input id="batVah2"></div>
+        <div class="field"><label>Cantidad</label><input id="batCant2" type="number" inputmode="numeric"></div>
+        <div class="field"><label>Año</label><input id="batAno2"></div>
+        <div class="field full"><label>Notas</label><input id="batNotas2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== ACTIVIDAD ====== -->
+  <div class="card collapsed" data-card>
+    <h2><span class="ico">3</span> Tipo de actividad y estado <span class="chev">▾</span></h2>
+    <div class="body">
+      <label>Tipo de actividad <span class="req">*</span></label>
+      <div class="seg" data-seg="tipoAct" data-req>
+        <button data-v="GENERAL">General</button><button data-v="CORRECTIVO">Correctivo</button>
+        <button data-v="INSTALACIÓN">Instalación</button><button data-v="NUEVO">Nuevo</button>
+        <button data-v="REVISIÓN">Revisión</button><button data-v="DIAGNOSTICO">Diagnóstico</button>
+        <button data-v="REPARADO">Reparado</button>
+      </div>
+      <label style="margin-top:12px">Antecedentes (estado al llegar) <span class="req">*</span></label>
+      <div class="seg" data-seg="antecedentes" data-req>
+        <button data-v="EN LINEA">En línea</button><button data-v="APAGADO">Apagado</button>
+        <button data-v="BYPASS">Bypass</button><button data-v="ALARMADO">Alarmado</button>
+      </div>
+      <div class="field" id="tipoAlarmaWrap" style="margin-top:8px;display:none">
+        <label>Tipo de alarma</label><input id="tipoAlarma">
+      </div>
+      <label style="margin-top:12px">Modo de mantenimiento <span class="req">*</span></label>
+      <div class="seg" data-seg="modoMtto" data-req>
+        <button data-v="APAGADO">Apagado</button><button data-v="BYPASS">Bypass</button><button data-v="ENCENDIDO">Encendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== MEDICIONES ====== -->
+  <div class="card collapsed" data-card>
+    <h2><span class="ico">4</span> Medición de parámetros <span class="chev">▾</span></h2>
+    <div class="body">
+      <div class="hint">Las casillas que queden vacías no se validan. El sistema avisa si un valor está fuera de rango o si V(F-F) no concuerda con V(F-N).</div>
+
+      <div class="measure-head">Entrada (IN) · Voltaje F-N</div>
+      <div class="grid g3">
+        <div class="field"><label>R</label><input class="mv" id="inFNr" type="number" inputmode="decimal" data-rule="vfn"><div class="msg warn">Fuera de rango (90–150 V)</div></div>
+        <div class="field"><label>S</label><input class="mv" id="inFNs" type="number" inputmode="decimal" data-rule="vfn"><div class="msg warn">Fuera de rango</div></div>
+        <div class="field"><label>T</label><input class="mv" id="inFNt" type="number" inputmode="decimal" data-rule="vfn"><div class="msg warn">Fuera de rango</div></div>
+      </div>
+      <div class="measure-head">Entrada (IN) · Voltaje F-F</div>
+      <div class="grid g3">
+        <div class="field"><label>R/S</label><input class="mv" id="inFFrs" type="number" inputmode="decimal" data-rule="vff"><div class="msg warn">Fuera de rango (160–260 V)</div></div>
+        <div class="field"><label>S/T</label><input class="mv" id="inFFst" type="number" inputmode="decimal" data-rule="vff"><div class="msg warn">Fuera de rango</div></div>
+        <div class="field"><label>R/T</label><input class="mv" id="inFFrt" type="number" inputmode="decimal" data-rule="vff"><div class="msg warn">Fuera de rango</div></div>
+      </div>
+      <div class="measure-head">Entrada (IN) · Corrientes (A)</div>
+      <div class="grid g3">
+        <div class="field"><label>R</label><input class="mv" id="inIr" type="number" inputmode="decimal"></div>
+        <div class="field"><label>S</label><input class="mv" id="inIs" type="number" inputmode="decimal"></div>
+        <div class="field"><label>T</label><input class="mv" id="inIt" type="number" inputmode="decimal"></div>
+      </div>
+
+      <div class="measure-head" style="color:#0a7">Salida (OUT) · Voltaje F-N</div>
+      <div class="grid g3">
+        <div class="field"><label>R</label><input class="mv" id="outFNr" type="number" inputmode="decimal" data-rule="vfn"><div class="msg warn">Fuera de rango</div></div>
+        <div class="field"><label>S</label><input class="mv" id="outFNs" type="number" inputmode="decimal" data-rule="vfn"><div class="msg warn">Fuera de rango</div></div>
+        <div class="field"><label>T</label><input class="mv" id="outFNt" type="number" inputmode="decimal" data-rule="vfn"><div class="msg warn">Fuera de rango</div></div>
+      </div>
+      <div class="measure-head" style="color:#0a7">Salida (OUT) · Voltaje F-F</div>
+      <div class="grid g3">
+        <div class="field"><label>R/S</label><input class="mv" id="outFFrs" type="number" inputmode="decimal" data-rule="vff"><div class="msg warn">Fuera de rango</div></div>
+        <div class="field"><label>S/T</label><input class="mv" id="outFFst" type="number" inputmode="decimal" data-rule="vff"><div class="msg warn">Fuera de rango</div></div>
+        <div class="field"><label>R/T</label><input class="mv" id="outFFrt" type="number" inputmode="decimal" data-rule="vff"><div class="msg warn">Fuera de rango</div></div>
+      </div>
+      <div class="measure-head" style="color:#0a7">Salida (OUT) · Corrientes (A)</div>
+      <div class="grid g3">
+        <div class="field"><label>R</label><input class="mv" id="outIr" type="number" inputmode="decimal"></div>
+        <div class="field"><label>S</label><input class="mv" id="outIs" type="number" inputmode="decimal"></div>
+        <div class="field"><label>T</label><input class="mv" id="outIt" type="number" inputmode="decimal"></div>
+      </div>
+
+      <div class="measure-head">Otros parámetros</div>
+      <div class="grid">
+        <div class="field"><label>Frecuencia entrada (Hz)</label><input id="frecIn" type="number" inputmode="decimal" data-rule="freq"><div class="msg err">Debe ser 50 o 60 Hz</div></div>
+        <div class="field"><label>Frecuencia salida (Hz)</label><input id="frecOut" type="number" inputmode="decimal" data-rule="freq"><div class="msg err">Debe ser 50 o 60 Hz</div></div>
+        <div class="field"><label>Voltaje N-T (V)</label><input id="vNT" type="number" inputmode="decimal" data-rule="vnt"><div class="msg warn">Alto: revisar tierra (>5 V)</div></div>
+        <div class="field"><label>Corriente N-T (A)</label><input id="iNT" type="number" inputmode="decimal"></div>
+        <div class="field"><label>Voltaje cargadora (V DC)</label><input id="vCarg" type="number" inputmode="decimal"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== CHECKLIST ====== -->
+  <div class="card collapsed" data-card>
+    <h2><span class="ico">5</span> Check list de actividades <span class="chev">▾</span></h2>
+    <div class="body" id="checklistBody"></div>
+  </div>
+
+  <!-- ====== PRUEBAS ====== -->
+  <div class="card collapsed" data-card>
+    <h2><span class="ico">6</span> Pruebas de operación <span class="chev">▾</span></h2>
+    <div class="body" id="pruebasBody"></div>
+  </div>
+
+  <!-- ====== NOVEDADES ====== -->
+  <div class="card collapsed" data-card>
+    <h2><span class="ico">7</span> Novedades y recomendaciones <span class="chev">▾</span></h2>
+    <div class="body">
+      <div class="field full"><label>Novedades</label><textarea id="novedades"></textarea></div>
+      <div class="field full"><label>¿Por qué?</label><textarea id="porque"></textarea></div>
+      <div class="field full"><label>Pendientes Comercial Onix</label><textarea id="pendOnix"></textarea></div>
+      <div class="field full"><label>Pendientes / recomendaciones cliente</label><textarea id="pendCliente"></textarea></div>
+    </div>
+  </div>
+
+  <!-- ====== CIERRE ====== -->
+  <div class="card collapsed" data-card>
+    <h2><span class="ico">8</span> Tiempos, entrega y firmas <span class="chev">▾</span></h2>
+    <div class="body">
+      <div class="measure-head">Tiempo del servicio</div>
+      <div class="grid g3">
+        <div class="field"><label>Llegada</label><input id="tLlegada" type="time"></div>
+        <div class="field"><label>Antesala</label><input id="tAntesala" type="time"></div>
+        <div class="field"><label>Salida</label><input id="tSalida" type="time"><div class="msg err">Salida debe ser posterior a llegada</div></div>
+      </div>
+      <div class="measure-head">Entrega del servicio</div>
+      <div class="grid">
+        <div class="field"><label>Nombre del técnico <span class="req">*</span></label><input id="tecnico" data-req></div>
+        <div class="field"><label>Nombre de quien recibe <span class="req">*</span></label><input id="recibe" data-req></div>
+      </div>
+      <div class="grid" style="margin-top:8px">
+        <div>
+          <label>Firma del técnico</label>
+          <canvas class="sign" id="firmaTec"></canvas>
+          <div class="sign-actions no-print"><button type="button" data-clear="firmaTec">Borrar</button></div>
+        </div>
+        <div>
+          <label>Firma de quien recibe</label>
+          <canvas class="sign" id="firmaRec"></canvas>
+          <div class="sign-actions no-print"><button type="button" data-clear="firmaRec">Borrar</button></div>
+        </div>
+      </div>
+      <div class="print-only" style="margin-top:8px;font-size:9px;color:#555">
+        soporte@comercialonix.com · Cra bis #14-72, B. Centenario - Pereira · 3117044834
+      </div>
+    </div>
+  </div>
+
+  <div id="validationBox"></div>
+</div>
+
+<div class="footbar no-print">
+  <span class="status" id="status">Borrador no guardado</span>
+  <button class="btn ghost" id="btnValidar">Validar</button>
+  <button class="btn primary" id="btnPDF">Generar PDF</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const EQUIPOS = [{"ubic": "RACK COMUNICACIONES TORRE", "marca": "NETION", "modelo": "EA903-RT", "kva": "3", "serie": "900031911160637", "activo": "", "ods": "29372", "fases": 1, "batCant": "6", "batAno": "2024", "vdc": "72", "strings": "1"}, {"ubic": "RACK COMUNICACIONES TOSTADORA", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "1", "serie": "83111902100015", "activo": "", "ods": "29370", "fases": 1, "batCant": "3", "batAno": "2025", "vdc": "36", "strings": "1"}, {"ubic": "TOSTADORA 5", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "2", "serie": "83212405500678", "activo": "", "ods": "29369", "fases": 1, "batCant": "4", "batAno": "2025", "vdc": "48", "strings": "1"}, {"ubic": "RACK CCTV TORRE", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "3", "serie": "83311810100120", "activo": "FNC20056037", "ods": "29371", "fases": 1, "batCant": "6", "batAno": "2025", "vdc": "72", "strings": "1"}, {"ubic": "TECNOLOGIA", "marca": "ENERGEX", "modelo": "PYRAMID", "kva": "20", "serie": "1808P0964004", "activo": "FNC20051230", "ods": "29368", "fases": 3, "batCant": "132", "batAno": "2024", "vdc": "±204 (408)", "strings": "3"}, {"ubic": "EXTRACCIÓN 3 Y 4", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "3", "serie": "83311404100267", "activo": "", "ods": "29376", "fases": 1, "batCant": "6", "batAno": "2024", "vdc": "72", "strings": "1"}, {"ubic": "LIOFILIZACION 3 UPS 1", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "3", "serie": "83311912100122", "activo": "", "ods": "29374", "fases": 1, "batCant": "6", "batAno": "2024", "vdc": "72", "strings": "1"}, {"ubic": "CONCENTRADOR 1", "marca": "APC", "modelo": "APC SUA", "kva": "2", "serie": "JS0941011294", "activo": "FNC20046915", "ods": "29375", "fases": 1, "batCant": "4", "batAno": "2024", "vdc": "48", "strings": "1"}, {"ubic": "LIOFILIZACION 3 UPS 2", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "3", "serie": "83311912100010", "activo": "", "ods": "29377", "fases": 1, "batCant": "6", "batAno": "2024", "vdc": "72", "strings": "1"}, {"ubic": "ESPUMADORAS 3", "marca": "ENERGEX", "modelo": "WINNER PRO", "kva": "3", "serie": "83311912500002", "activo": "FNC20055652", "ods": "29378", "fases": 1, "batCant": "6", "batAno": "2024", "vdc": "72", "strings": "1"}, {"ubic": "REFRIGERACION 3", "marca": "NETION", "modelo": "EA903II", "kva": "3", "serie": "900031911160634", "activo": "", "ods": "29373", "fases": 1, "batCant": "6", "batAno": "2026", "vdc": "72", "strings": "1"}, {"ubic": "CONCENTRADOR 2", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "3", "serie": "83312004100169", "activo": "", "ods": "29381", "fases": 1, "batCant": "6", "batAno": "2026", "vdc": "72", "strings": "1"}, {"ubic": "EXTRACCIÓN 1 Y 2", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "3", "serie": "83311404100268", "activo": "", "ods": "29379", "fases": 1, "batCant": "6", "batAno": "2024", "vdc": "72", "strings": "1"}, {"ubic": "EVAPORADOR 5", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "3", "serie": "83311912500024", "activo": "", "ods": "29380", "fases": 1, "batCant": "6", "batAno": "2025", "vdc": "72", "strings": "1"}, {"ubic": "TANQUES", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "3", "serie": "83311612100223", "activo": "FNC20054575", "ods": "29382", "fases": 1, "batCant": "6", "batAno": "2024", "vdc": "72", "strings": "1"}, {"ubic": "RAYOS X FRASCOS 2 (ALQUILADA)", "marca": "PCM", "modelo": "ULT", "kva": "6", "serie": "10029820512", "activo": "", "ods": "29389", "fases": 3, "batCant": "20", "batAno": "2025", "vdc": "240", "strings": "1"}, {"ubic": "FRASCOS 2 TABLERO DE CONTROL", "marca": "TRIPPLITE", "modelo": "", "kva": "3", "serie": "911ALCPS438300163", "activo": "", "ods": "29388", "fases": 1, "batCant": "6", "batAno": "2025", "vdc": "72", "strings": "1"}, {"ubic": "ALMACEN INGENIERIA", "marca": "PCM", "modelo": "ULT", "kva": "10", "serie": "10000471309", "activo": "FNC20048207", "ods": "29383", "fases": 3, "batCant": "40", "batAno": "2025", "vdc": "240", "strings": "2"}, {"ubic": "CALDERA 4 Y RESIDUOS", "marca": "POWERWARE", "modelo": "PW9120", "kva": "3", "serie": "RA063A0479", "activo": "", "ods": "29385", "fases": 1, "batCant": "8", "batAno": "2025", "vdc": "96", "strings": "1"}, {"ubic": "CALDERA 6 PC", "marca": "ENERGEX", "modelo": "GALLEON X9", "kva": "3", "serie": "83312201100066", "activo": "", "ods": "29384", "fases": 1, "batCant": "6", "batAno": "2024", "vdc": "72", "strings": "1"}, {"ubic": "REFRIGERACION 1 (OUTSOURCING)", "marca": "PCM", "modelo": "VGD", "kva": "3", "serie": "40380871310", "activo": "", "ods": "29387", "fases": 1, "batCant": "6", "batAno": "2025", "vdc": "72", "strings": "1"}, {"ubic": "CALDERA 3", "marca": "PCM", "modelo": "VGD", "kva": "3", "serie": "40381391310", "activo": "", "ods": "29386", "fases": 1, "batCant": "6", "batAno": "2025", "vdc": "72", "strings": "1"}];
+
+// ---------- catálogo ----------
+const sel = document.getElementById('equipoSel');
+EQUIPOS.forEach((e,i)=>{
+  const o=document.createElement('option');
+  o.value=i; o.textContent=`${e.ubic} · ${e.marca} ${e.modelo||''} ${e.kva}kVA · ${e.serie}`;
+  sel.appendChild(o);
+});
+const $=id=>document.getElementById(id);
+sel.addEventListener('change',()=>{
+  const e=EQUIPOS[sel.value]; if(!e) return;
+  $('ods').value=e.ods; $('marca').value=e.marca; $('modelo').value=e.modelo;
+  $('capacidad').value=e.kva+' kVA'; $('serie').value=e.serie; $('ubicacion').value=e.ubic;
+  $('batCant').value=e.batCant; $('batAno').value=e.batAno;
+  const b=$('equipBanner'); b.classList.add('show');
+  b.innerHTML=`<b>${e.ubic}</b> — ${e.marca} ${e.modelo||''} ${e.kva}kVA · Serie <b>${e.serie}</b>`+
+    (e.activo?` · Activo ${e.activo}`:'')+` · ${e.fases===3?'Trifásico':'Monofásico'} · Baterías: ${e.batCant} und (${e.vdc} VDC)`;
+  if(!$('fecha').value) $('fecha').value=new Date().toISOString().slice(0,10);
+  recalc(); save();
+});
+
+// ---------- checklist & pruebas (build) ----------
+const CHECK=[
+  ['cubierta','¿Retirar cubiertas?'],['limpieza','¿Limpieza de cubiertas?'],['soplado','¿Soplado del equipo?'],
+  ['cableado','¿Limpieza del cableado?'],['tarjetas','¿Limpieza de tarjetas?'],['ventiladores','¿Limpieza de ventiladores?'],
+  ['filtros','¿Limpieza de filtros AC/DC?'],['baterias','¿Limpieza y medición de baterías?'],
+  ['contactores','¿Limpieza de contactores/relevos?'],['insptarj','¿Inspección y ajuste de tarjetas?'],
+  ['conectores','¿Ajuste de conectores?'],['transf','¿Verificación de transformadores?'],
+  ['protecciones','¿Inspección de protecciones?'],['potencia','¿Inspección de elementos de potencia?']
+];
+const PRUEBAS=[
+  ['ope','Equipo operando correctamente'],['carga1','Transf. carga (Equipo→Byp)'],
+  ['carga2','Transf. carga (Byp→Equipo)'],['autonomia','Prueba de autonomía'],
+  ['plantae','¿Operación con planta eléctrica?'],['secfases','¿Secuencia de fases correcta?']
+];
+function buildYN(list,container){
+  list.forEach(([id,label])=>{
+    const row=document.createElement('div');row.className='checkrow';
+    row.innerHTML=`<span class="lbl">${label}</span>
+      <span class="yn" data-yn="${id}">
+        <button type="button" class="si" data-v="SI">SÍ</button>
+        <button type="button" class="no" data-v="NO">NO</button></span>`;
+    container.appendChild(row);
+  });
+}
+buildYN(CHECK,$('checklistBody'));
+const pf=document.createElement('div');buildYN(PRUEBAS,pf);$('pruebasBody').appendChild(pf);
+const frow=document.createElement('div');frow.className='grid';frow.style.marginTop='8px';
+frow.innerHTML='<div class="field"><label>Frecuencia de planta (Hz)</label><input id="frecPlanta" type="number" inputmode="decimal" data-rule="freq"><div class="msg err">Debe ser 50 o 60 Hz</div></div>';
+$('pruebasBody').appendChild(frow);
+
+// segmented + yn handlers
+const state={tipoAct:'',antecedentes:'',modoMtto:'',yn:{}};
+document.querySelectorAll('[data-seg]').forEach(seg=>{
+  seg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    seg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); state[seg.dataset.seg]=b.dataset.v;
+    if(seg.dataset.seg==='antecedentes')
+      $('tipoAlarmaWrap').style.display=(b.dataset.v==='ALARMADO')?'block':'none';
+    recalc();save();
+  }));
+});
+document.querySelectorAll('[data-yn]').forEach(yn=>{
+  yn.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    yn.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); state.yn[yn.dataset.yn]=b.dataset.v; recalc();save();
+  }));
+});
+
+// ---------- collapse cards ----------
+document.querySelectorAll('[data-card] > h2').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('collapsed')));
+
+// ---------- field-level validation ----------
+function num(v){v=parseFloat(v);return isNaN(v)?null:v;}
+function ruleCheck(inp){
+  const f=inp.closest('.field'); if(!f)return;
+  f.classList.remove('bad','warnf');
+  const v=inp.value.trim(); if(v==='')return;
+  const r=inp.dataset.rule; const n=num(v);
+  if(r==='tel'){ if(!/^\d{7,10}$/.test(v)) f.classList.add('bad'); }
+  else if(r==='freq'){ if(n!==50&&n!==60) f.classList.add('bad'); }
+  else if(r==='vfn'){ if(n!==null&&(n<90||n>150)) f.classList.add('warnf'); }
+  else if(r==='vff'){ if(n!==null&&(n<160||n>260)) f.classList.add('warnf'); }
+  else if(r==='vnt'){ if(n!==null&&n>5) f.classList.add('warnf'); }
+}
+document.querySelectorAll('[data-rule]').forEach(i=>i.addEventListener('input',()=>{ruleCheck(i);recalc();save();}));
+
+// salida > llegada
+function timeCheck(){
+  const f=$('tSalida').closest('.field');f.classList.remove('bad');
+  const l=$('tLlegada').value,s=$('tSalida').value;
+  if(l&&s&&s<=l) f.classList.add('bad');
+}
+['tLlegada','tSalida'].forEach(id=>$(id).addEventListener('input',()=>{timeCheck();recalc();save();}));
+
+// ---------- progress + autosave ----------
+function recalc(){
+  let total=0,done=0;
+  document.querySelectorAll('[data-req]').forEach(el=>{
+    total++;
+    if(el.dataset.seg){ if(state[el.dataset.seg]) done++; }
+    else if(el.value && el.value.trim()) done++;
+  });
+  // selección de equipo cuenta
+  total++; if(sel.value) done++;
+  $('prog').style.width=Math.round(done/total*100)+'%';
+}
+let saveT;
+function save(){
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    try{localStorage.setItem('ods_ups_draft',JSON.stringify(collect()));
+      $('status').textContent='Borrador guardado ✓ '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    }catch(e){}
+  },400);
+}
+document.querySelectorAll('input,select,textarea').forEach(el=>el.addEventListener('input',save));
+
+// ---------- signature pads ----------
+function initPad(id){
+  const c=$(id),ctx=c.getContext('2d');
+  function size(){const r=c.getBoundingClientRect();c.width=r.width*2;c.height=r.height*2;ctx.scale(2,2);ctx.lineWidth=2;ctx.lineCap='round';ctx.strokeStyle='#11243a';}
+  size();let drawing=false,last=null;
+  function pos(e){const r=c.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
+  function start(e){drawing=true;last=pos(e);e.preventDefault();}
+  function move(e){if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;c.dataset.signed='1';e.preventDefault();}
+  function end(){drawing=false;}
+  c.addEventListener('mousedown',start);c.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+  c.addEventListener('touchstart',start);c.addEventListener('touchmove',move);c.addEventListener('touchend',end);
+}
+initPad('firmaTec');initPad('firmaRec');
+document.querySelectorAll('[data-clear]').forEach(b=>b.addEventListener('click',()=>{
+  const c=$(b.dataset.clear);c.getContext('2d').clearRect(0,0,c.width,c.height);c.dataset.signed='';
+}));
+
+// ---------- collect ----------
+function collect(){
+  const o={fields:{},seg:state,yn:state.yn};
+  document.querySelectorAll('input,select,textarea').forEach(el=>{if(el.id)o.fields[el.id]=el.value;});
+  return o;
+}
+
+// ---------- global validation ----------
+function validate(){
+  const errors=[],warns=[];
+  if(!sel.value) errors.push('Debe seleccionar el equipo del catálogo.');
+  document.querySelectorAll('[data-req]').forEach(el=>{
+    const lbl=el.closest('.field')?el.closest('.field').querySelector('label').textContent.replace('*','').trim()
+      : (el.previousElementSibling?el.previousElementSibling.textContent.replace('*','').trim():el.dataset.seg);
+    if(el.dataset.seg){ if(!state[el.dataset.seg]) errors.push('Falta: '+lbl); }
+    else if(!el.value.trim()) errors.push('Falta: '+lbl);
+  });
+  // frecuencias
+  ['frecIn','frecOut','frecPlanta'].forEach(id=>{const v=num($(id).value);if($(id).value.trim()&&v!==50&&v!==60)errors.push('Frecuencia inválida en "'+$(id).previousElementSibling.textContent+'" (debe ser 50/60).');});
+  // tel
+  if($('celular').value.trim()&&!/^\d{7,10}$/.test($('celular').value.trim())) errors.push('Celular debe tener 7 a 10 dígitos.');
+  // tiempo
+  const l=$('tLlegada').value,s=$('tSalida').value; if(l&&s&&s<=l) errors.push('La hora de salida debe ser posterior a la de llegada.');
+  // coherencia F-F ≈ √3 × F-N (trifásico) — chequea promedios cuando hay datos
+  function avg(ids){const a=ids.map(i=>num($(i).value)).filter(x=>x!==null);return a.length?a.reduce((p,c)=>p+c,0)/a.length:null;}
+  [['inFNr,inFNs,inFNt','inFFrs,inFFst,inFFrt','entrada'],['outFNr,outFNs,outFNt','outFFrs,outFFst,outFFrt','salida']]
+   .forEach(([fn,ff,lbl])=>{
+     const a=avg(fn.split(',')),b=avg(ff.split(','));
+     if(a&&b){ const exp=a*1.732; const rel=Math.abs(b-exp)/exp;
+       if(rel>0.15 && b<a*1.2) warns.push(`Revisar ${lbl}: V(F-F)≈${b.toFixed(0)} no concuerda con √3·V(F-N)≈${exp.toFixed(0)}. ¿Equipo monofásico o error de digitación?`);
+     }
+   });
+  // rangos voltaje
+  document.querySelectorAll('input[data-rule]').forEach(i=>{ruleCheck(i);const f=i.closest('.field');
+    if(f.classList.contains('warnf')) warns.push('Valor fuera de rango en "'+f.querySelector('label').textContent+'": '+i.value);
+  });
+  // baterías vs catálogo
+  if(sel.value){const e=EQUIPOS[sel.value];
+    if($('batCant').value&&e.batCant&&$('batCant').value!=e.batCant)
+      warns.push(`Cantidad de baterías (${$('batCant').value}) difiere del registro del equipo (${e.batCant}).`);
+  }
+  // firmas
+  if(!$('firmaTec').dataset.signed) warns.push('Falta firma del técnico.');
+  if(!$('firmaRec').dataset.signed) warns.push('Falta firma de quien recibe.');
+
+  const box=$('validationBox');
+  if(!errors.length&&!warns.length){
+    box.className='ok';box.innerHTML='✓ <b>Todo correcto.</b> El formato está completo y consistente, listo para generar el PDF.';
+  }else{
+    box.className='has';
+    box.innerHTML=`<b>${errors.length} error(es) y ${warns.length} advertencia(s)</b>`+
+      '<ul>'+errors.map(e=>`<li class="e">⛔ ${e}</li>`).join('')+warns.map(w=>`<li>⚠️ ${w}</li>`).join('')+'</ul>';
+  }
+  box.scrollIntoView({behavior:'smooth',block:'center'});
+  return errors.length===0;
+}
+$('btnValidar').addEventListener('click',validate);
+$('btnPDF').addEventListener('click',()=>{
+  if(!validate()){toast('Corrige los errores antes de generar el PDF');return;}
+  document.querySelectorAll('[data-card]').forEach(c=>c.classList.remove('collapsed'));
+  setTimeout(()=>window.print(),200);
+});
+
+// ---------- toast ----------
+let tT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ---------- restore draft ----------
+(function restore(){
+  try{const d=JSON.parse(localStorage.getItem('ods_ups_draft'));if(!d)return;
+    if(d.fields)for(const k in d.fields){if($(k))$(k).value=d.fields[k];}
+    if(d.fields&&d.fields.equipoSel){sel.value=d.fields.equipoSel;}
+    if(d.seg){for(const k of ['tipoAct','antecedentes','modoMtto']){if(d.seg[k]){state[k]=d.seg[k];
+      const seg=document.querySelector(`[data-seg="${k}"]`);if(seg){const b=seg.querySelector(`[data-v="${CSS.escape(d.seg[k])}"]`);if(b)b.classList.add('on');}}}}
+    if(d.yn){state.yn=d.yn;for(const k in d.yn){const yn=document.querySelector(`[data-yn="${k}"]`);if(yn){const b=yn.querySelector(`[data-v="${d.yn[k]}"]`);if(b)b.classList.add('on');}}}
+    if(state.antecedentes==='ALARMADO')$('tipoAlarmaWrap').style.display='block';
+    $('status').textContent='Borrador recuperado';
+  }catch(e){}
+  recalc();
+})();
+recalc();
+</script>
+</body>
+</html>
