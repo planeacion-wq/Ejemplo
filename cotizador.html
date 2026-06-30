@@ -51,6 +51,15 @@ textarea{resize:vertical;min-height:54px}
 .banner{background:var(--accent);border:1px solid #bcdcff;border-radius:10px;padding:10px 12px;font-size:13px;margin:10px 0;display:none}
 .banner.show{display:block}
 .banner b{color:var(--onix)}
+.compras{display:none;margin:0 0 10px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.compras.show{display:block}
+.compras .ch{background:#f5f8fb;color:var(--onix);font-weight:700;font-size:12px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.compras table{width:100%;border-collapse:collapse}
+.compras td{padding:7px 12px;font-size:12.5px;border-bottom:1px solid #eef2f6;vertical-align:top}
+.compras tr:last-child td{border-bottom:none}
+.compras td.r{text-align:right;white-space:nowrap;color:var(--onix);font-weight:600}
+.compras td.f{color:var(--muted);white-space:nowrap}
+.compras .more{padding:7px 12px;font-size:11.5px;color:var(--muted)}
 .rowflex{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
 .rowflex > *{flex:1 1 auto}
 /* ---- Ítems ---- */
@@ -134,6 +143,7 @@ textarea{resize:vertical;min-height:54px}
       </div>
 
       <div class="banner" id="cliBanner"></div>
+      <div id="comprasPanel" class="compras"></div>
 
       <!-- Datos del cliente seleccionado / nuevo -->
       <div id="cliForm" style="margin-top:6px">
@@ -163,7 +173,7 @@ textarea{resize:vertical;min-height:54px}
         <button class="btn primary small" id="addCatBtn">+ Ítem del catálogo</button>
         <button class="btn ghost small" id="addFreeBtn">+ Ítem libre</button>
       </div>
-      <div class="hint" style="margin-top:8px">Si el cliente ya compró un ítem, verás su <b>último precio y fecha</b> junto al precio de lista, para mantenerlo o modificarlo.</div>
+      <div class="hint" style="margin-top:8px">Revisa el panel de <b>compras anteriores</b> del cliente (arriba) para decidir si mantienes o ajustas los precios. Los ítems del catálogo traen su precio de lista sugerido.</div>
     </div>
   </div>
 
@@ -244,7 +254,7 @@ function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');cle
 function status(m){$('status').textContent=m;}
 
 /* Estado en memoria */
-let CLIENTES=[], CATALOGO=[], HIST={items:{},ultimaFecha:''}, currentNit='';
+let CLIENTES=[], CATALOGO=[], HIST={ultimaFecha:'',compras:[]}, currentCliente='';
 
 /* ============================ JSONP ============================ */
 let jsonpId=0;
@@ -319,7 +329,7 @@ $('cliSel').addEventListener('change',async()=>{
   const c=CLIENTES[+i]; if(!c) return;
   fillCliForm(c);
   $('cliFormHint').textContent='Cliente seleccionado. Puedes editar y volver a guardar si cambió algún dato.';
-  await loadHistorico(c['NIT']);
+  await loadHistorico(c['Razon Social']);
 });
 
 function fillCliForm(c){
@@ -333,10 +343,16 @@ function readCliForm(){
 }
 $('newCliLink').addEventListener('click',e=>{
   e.preventDefault();
-  $('cliSel').value=''; fillCliForm({}); currentNit=''; HIST={items:{},ultimaFecha:''};
-  $('cliBanner').classList.remove('show'); refreshSuggestions();
-  $('cliFormHint').textContent='Cliente nuevo: diligencia los datos y pulsa “Guardar cliente en la base”.';
+  $('cliSel').value=''; fillCliForm({}); currentCliente=''; HIST={ultimaFecha:'',compras:[]};
+  $('cliBanner').classList.remove('show'); $('comprasPanel').classList.remove('show'); refreshSuggestions();
+  $('cliFormHint').textContent='Cliente nuevo: diligencia los datos y pulsa “Guardar cliente en la base”. (Al escribir la razón social verás sus compras anteriores, si existen.)';
   $('cRazon').focus();
+});
+// Al digitar la razón social de un cliente no listado, busca su histórico por nombre.
+$('cRazon').addEventListener('change',()=>{
+  if($('cliSel').value!=='') return;            // ya viene de la base
+  const nombre=$('cRazon').value.trim();
+  if(nombre&&nombre!==currentCliente) loadHistorico(nombre);
 });
 
 $('saveCliBtn').addEventListener('click',async()=>{
@@ -371,33 +387,43 @@ async function flushCliQueue(){
 }
 
 /* ============================ Histórico ============================ */
-async function loadHistorico(nit){
-  currentNit=nit||'';
-  HIST={items:{},ultimaFecha:''};
-  $('cliBanner').classList.remove('show');
-  if(!nit){refreshSuggestions();return;}
-  if(!endpoint()){refreshSuggestions();return;}
-  status('Consultando histórico…');
+async function loadHistorico(nombre){
+  currentCliente=nombre||'';
+  HIST={ultimaFecha:'',compras:[]};
+  $('cliBanner').classList.remove('show'); $('comprasPanel').classList.remove('show');
+  if(!nombre){return;}
+  if(!endpoint()){showCliBanner();return;}
+  status('Consultando histórico de ventas…');
   try{
-    const r=await jsonp({action:'historico',nit:nit});
+    const r=await jsonp({action:'historico',cliente:nombre});
     if(r&&r.ok&&r.historico){HIST=r.historico;}
     setEpState(true);
   }catch(e){ /* sin conexión: queda sin histórico */ }
-  showCliBanner(); refreshSuggestions(); status('Listo.');
+  showCliBanner(); renderCompras(); status('Listo.');
 }
 function showCliBanner(){
   const b=$('cliBanner');
   if(HIST.ultimaFecha){
-    b.innerHTML='🗓️ <b>Última cotización de este cliente:</b> '+fmtDate(HIST.ultimaFecha)+
-      '. Revisa abajo si deseas <b>mantener</b> los precios anteriores o <b>modificarlos</b>.';
-    b.classList.add('show');
+    b.innerHTML='🗓️ <b>Última venta/cotización a este cliente:</b> '+fmtDate(HIST.ultimaFecha)+
+      '. Revisa sus <b>compras anteriores</b> y decide si <b>mantienes</b> o <b>ajustas</b> los precios.';
+  }else if((HIST.compras||[]).length){
+    b.innerHTML='🗓️ Hay <b>'+HIST.compras.length+'</b> compras anteriores de este cliente (abajo).';
   }else{
-    b.innerHTML='ℹ️ Este cliente no tiene historial de compras registrado. Se usará el precio de lista.';
-    b.classList.add('show');
+    b.innerHTML='ℹ️ Sin compras anteriores registradas para este cliente en el histórico.';
   }
+  b.classList.add('show');
 }
-function histKey(codigo,desc){const c=String(codigo||'').trim().toUpperCase();return c||('D:'+String(desc||'').trim().toUpperCase());}
-function histFor(codigo,desc){return HIST.items?HIST.items[histKey(codigo,desc)]:null;}
+function renderCompras(){
+  const p=$('comprasPanel'), c=HIST.compras||[];
+  if(!c.length){p.classList.remove('show');p.innerHTML='';return;}
+  let rows='';
+  c.forEach(x=>{rows+='<tr><td class="f">'+(x.fecha?fmtDate(x.fecha):'—')+'</td><td>'+esc(x.detalle||'')+
+    '</td><td class="r">'+fmtCOP(x.total||x.subtotal||0)+'</td></tr>';});
+  p.innerHTML='<div class="ch">🧾 Compras anteriores de '+esc(currentCliente)+'</div>'+
+    '<table>'+rows+'</table>'+
+    (c.length>=20?'<div class="more">Mostrando las 20 más recientes.</div>':'');
+  p.classList.add('show');
+}
 
 /* ============================ Catálogo ============================ */
 function renderCatalogo(){
@@ -458,20 +484,11 @@ function renumber(){[...document.querySelectorAll('#items .item')].forEach((d,i)
 function updateSuggestion(div){
   const ttl=div.querySelector('.ttl-in').value, codigo=div.dataset.codigo||'';
   const sugg=div.querySelector('.sugg');
-  const h=histFor(codigo,ttl);
   const cat=findCat((codigo?codigo+' · ':'')+ttl)||findCat(ttl);
   const lista=cat?Number(cat['Precio Lista'])||0:null;
-  if(!h && lista==null){sugg.classList.remove('show');sugg.innerHTML='';return;}
-  let html='', pills='';
-  if(h){
-    html+='Este cliente pagó <b>'+fmtCOP(h.precio)+'</b>'+(h.fecha?(' el '+fmtDate(h.fecha)):'')+'. ';
-    pills+='<span class="pill" data-v="'+h.precio+'">Mantener '+fmtCOP(h.precio)+'</span>';
-  }
-  if(lista!=null){
-    html+=(h?'Precio de lista: <b>'+fmtCOP(lista)+'</b>.':'Precio de lista: <b>'+fmtCOP(lista)+'</b>.');
-    pills+='<span class="pill" data-v="'+lista+'">Usar lista '+fmtCOP(lista)+'</span>';
-  }
-  sugg.innerHTML=html+'<div class="pills">'+pills+'</div>';
+  if(lista==null){sugg.classList.remove('show');sugg.innerHTML='';return;}
+  sugg.innerHTML='Precio de lista: <b>'+fmtCOP(lista)+'</b>.<div class="pills">'+
+    '<span class="pill" data-v="'+lista+'">Usar lista '+fmtCOP(lista)+'</span></div>';
   sugg.classList.add('show');
   sugg.querySelectorAll('.pill').forEach(pl=>pl.onclick=()=>{div.querySelector('.p').value=pl.dataset.v;recalc();});
 }
@@ -497,11 +514,11 @@ async function getConsecutivo(){
   if($('consec').value) return $('consec').value;
   let n='';
   try{const r=await jsonp({action:'consecutivo'}); if(r&&r.ok) n=r.consecutivo;}catch(e){}
-  if(!n){ // sin conexión: provisional local
-    const y=new Date().getFullYear();
+  if(!n){ // sin conexión: provisional local con tu formato PP-MMAAAA-Lnnn
+    const d=new Date(), mm=('0'+(d.getMonth()+1)).slice(-2), y=d.getFullYear();
     let c=parseInt(localStorage.getItem('cot_localseq')||'0',10)+1;
     localStorage.setItem('cot_localseq',String(c));
-    n='COT-'+y+'-L'+('000'+c).slice(-3);
+    n='PP-'+mm+y+'-L'+('00'+c).slice(-3);
   }
   $('consec').value=n; return n;
 }
@@ -568,7 +585,7 @@ function saveDraft(){
     q:d.querySelector('.q').value, p:d.querySelector('.p').value,
     iva:d.querySelector('.iva').value, u:d.querySelector('.u').value
   }));
-  const d={cli:readCliForm(),nit:currentNit,items,validez:$('validez').value,pago:$('pago').value,
+  const d={cli:readCliForm(),cliente:currentCliente,items,validez:$('validez').value,pago:$('pago').value,
     entrega:$('entrega').value,obs:$('obs').value,vendedor:$('vendedor').value};
   localStorage.setItem(DRAFT_KEY,JSON.stringify(d));
 }
@@ -577,7 +594,7 @@ function loadDraft(){
     const d=JSON.parse(localStorage.getItem(DRAFT_KEY)); if(!d) return;
     if(d.cli){const c=d.cli;$('cRazon').value=c.razonSocial||'';$('cNit').value=c.nit||'';$('cTel').value=c.telefono||'';
       $('cCorreo').value=c.correo||'';$('cCiudad').value=c.ciudad||'';$('cDir').value=c.direccion||'';$('cContacto').value=c.contacto||'';}
-    currentNit=d.nit||'';
+    currentCliente=d.cliente||d.cli&&d.cli.razonSocial||'';
     $('validez').value=d.validez||''; if(d.pago)$('pago').value=d.pago; $('entrega').value=d.entrega||'';
     $('obs').value=d.obs||''; $('vendedor').value=d.vendedor||'';
     (d.items||[]).forEach(it=>{
@@ -605,7 +622,8 @@ $('pdfBtn').onclick=generarPDF;
 $('resetBtn').onclick=()=>{
   if(!confirm('¿Limpiar la cotización actual?')) return;
   localStorage.removeItem(DRAFT_KEY);
-  $('items').innerHTML=''; fillCliForm({}); $('cliSel').value=''; currentNit='';
+  $('items').innerHTML=''; fillCliForm({}); $('cliSel').value=''; currentCliente=''; HIST={ultimaFecha:'',compras:[]};
+  $('comprasPanel').classList.remove('show');
   ['validez','entrega','obs','vendedor','consec'].forEach(id=>$(id).value=''); $('pago').selectedIndex=0;
   $('cliBanner').classList.remove('show'); recalc(); setValidezDefault(); toast('Cotización limpia');
 };
@@ -624,7 +642,7 @@ function setValidezDefault(){
   loadDraft();
   setValidezDefault();
   recalc();
-  if(endpoint()){ reloadData(); if(currentNit) loadHistorico(currentNit); }
+  if(endpoint()){ reloadData(); if(currentCliente) loadHistorico(currentCliente); }
   if(!document.querySelector('#items .item')) addItem(true);
 })();
 </script>
