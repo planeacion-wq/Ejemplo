@@ -313,13 +313,32 @@ canvas.sign{width:100%;height:130px;border:1.5px dashed var(--line);border-radiu
     </div>
   </div>
 
+  <!-- ====== ENVÍO A DRIVE ====== -->
+  <div class="card collapsed no-print" data-card>
+    <h2><span class="ico">9</span> Envío automático a Drive <span class="chev">▾</span></h2>
+    <div class="body">
+      <div class="hint" style="margin-bottom:8px">Al enviar, los datos validados se agregan como una fila en tu hoja de Google Sheets, sin digitación manual. Configura una sola vez la URL del Web App (ver <b>INSTRUCCIONES-DRIVE.md</b>).</div>
+      <div class="field full">
+        <label>URL del Web App (Apps Script)</label>
+        <input id="endpointUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+        <div class="hint">Se guarda solo en este dispositivo.</div>
+      </div>
+      <div class="sign-actions">
+        <button type="button" id="btnAbrirEp">Abrir endpoint</button>
+        <button type="button" id="btnFlush" style="display:none">Reintentar pendientes</button>
+      </div>
+      <div class="hint" id="pendingInfo" style="margin-top:8px">Sin envíos pendientes</div>
+    </div>
+  </div>
+
   <div id="validationBox"></div>
 </div>
 
 <div class="footbar no-print">
   <span class="status" id="status">Borrador no guardado</span>
   <button class="btn ghost" id="btnValidar">Validar</button>
-  <button class="btn primary" id="btnPDF">Generar PDF</button>
+  <button class="btn ghost" id="btnPDF">PDF</button>
+  <button class="btn primary" id="btnEnviar">Enviar a Drive</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -526,6 +545,95 @@ $('btnPDF').addEventListener('click',()=>{
 
 // ---------- toast ----------
 let tT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ---------- Envío a Google Drive (Sheets vía Apps Script Web App) ----------
+const EP_KEY='ods_ups_endpoint', Q_KEY='ods_ups_queue';
+const epInput=$('endpointUrl');
+epInput.value=localStorage.getItem(EP_KEY)||'';
+epInput.addEventListener('input',()=>{localStorage.setItem(EP_KEY,epInput.value.trim());});
+function endpoint(){return (localStorage.getItem(EP_KEY)||'').trim();}
+function getQueue(){try{return JSON.parse(localStorage.getItem(Q_KEY))||[];}catch(e){return[];}}
+function setQueue(q){localStorage.setItem(Q_KEY,JSON.stringify(q));updatePending();}
+function updatePending(){const n=getQueue().length;const el=$('pendingInfo');
+  if(el)el.textContent=n?(n+' envío(s) pendiente(s) de conexión'):'Sin envíos pendientes';
+  const b=$('btnFlush');if(b)b.style.display=n?'inline-block':'none';}
+
+function buildPayload(){
+  const v=id=>($(id)?$(id).value.trim():'');
+  const e=sel.value?EQUIPOS[sel.value]:{};
+  const p={
+   'FECHA REGISTRO':new Date().toLocaleString('es-CO'),
+   'ODS':v('ods'),'FECHA':v('fecha'),'CLIENTE':v('cliente'),'CIUDAD':v('ciudad'),
+   'DIRECCIÓN':v('direccion'),'CONTACTO':v('contacto'),'CELULAR':v('celular'),
+   'UBICACIÓN':v('ubicacion'),'MARCA':v('marca'),'MODELO':v('modelo'),
+   'KVA':v('capacidad').replace(/\s*kVA/i,''),'SERIE':v('serie'),'ACTIVO':e.activo||'',
+   'TENSIÓN NOMINAL IN':v('tnomIn'),'TENSIÓN NOMINAL OUT':v('tnomOut'),
+   'TIPO ACTIVIDAD':state.tipoAct,'ANTECEDENTES':state.antecedentes,'TIPO ALARMA':v('tipoAlarma'),
+   'MODO MANTENIMIENTO':state.modoMtto,
+   'TENSION V AC L1-N (INPUT)':v('inFNr'),'TENSION V AC L2-N (INPUT)':v('inFNs'),'TENSION V AC L3-N (INPUT)':v('inFNt'),
+   'TENSION V AC L1-L2 (INPUT)':v('inFFrs'),'TENSION V AC L2-L3 (INPUT)':v('inFFst'),'TENSION V AC L1-L3 (INPUT)':v('inFFrt'),
+   'CORRIENTE R (INPUT)':v('inIr'),'CORRIENTE S (INPUT)':v('inIs'),'CORRIENTE T (INPUT)':v('inIt'),
+   'TENSION V AC L1-N (OUTPUT)':v('outFNr'),'TENSION V AC L2-N (OUTPUT)':v('outFNs'),'TENSION V AC L3-N (OUTPUT)':v('outFNt'),
+   'TENSION V AC L1-L2 (OUTPUT)':v('outFFrs'),'TENSION V AC L2-L3 (OUTPUT)':v('outFFst'),'TENSION V AC L1-L3 (OUTPUT)':v('outFFrt'),
+   'CORRIENTE R (OUTPUT)':v('outIr'),'CORRIENTE S (OUTPUT)':v('outIs'),'CORRIENTE T (OUTPUT)':v('outIt'),
+   'TENSION V AC N-PE':v('vNT'),'CORRIENTE N-T':v('iNT'),
+   'FRECUENCIA HZ':v('frecIn'),'FRECUENCIA SALIDA HZ':v('frecOut'),'FRECUENCIA PLANTA HZ':v('frecPlanta'),
+   'VOLTAJE CARGADORA VDC':v('vCarg'),
+   'BATERIA MARCA':v('batMarca'),'BATERIA V/AH':v('batVah'),'CANTIDAD BATERIA':v('batCant'),
+   'AÑO DE FABRICACION BATERIAS':v('batAno'),'BATERIA NOTAS':v('batNotas'),
+   'BATERIA EXT MARCA':v('batMarca2'),'BATERIA EXT V/AH':v('batVah2'),'BATERIA EXT CANTIDAD':v('batCant2'),
+   'BATERIA EXT AÑO':v('batAno2'),'BATERIA EXT NOTAS':v('batNotas2'),
+   'TENSION NOMINAL (V DC)':e.vdc||'','CANTIDAD STRINGS':e.strings||'',
+   'NOVEDADES':v('novedades'),'POR QUE':v('porque'),'PENDIENTES ONIX':v('pendOnix'),'PENDIENTES CLIENTE':v('pendCliente'),
+   'HORA LLEGADA':v('tLlegada'),'HORA ANTESALA':v('tAntesala'),'HORA SALIDA':v('tSalida'),
+   'TECNICO':v('tecnico'),'RECIBE':v('recibe'),
+   'FIRMA TECNICO':$('firmaTec').dataset.signed?'Sí':'No','FIRMA RECIBE':$('firmaRec').dataset.signed?'Sí':'No'
+  };
+  CHECK.forEach(([id,label])=>{p['CHK '+label]=state.yn[id]||'';});
+  PRUEBAS.forEach(([id,label])=>{p['PRB '+label]=state.yn[id]||'';});
+  return p;
+}
+
+function postPayload(p){
+  const url=endpoint();
+  if(!url) return Promise.reject(new Error('NO_ENDPOINT'));
+  const body=new URLSearchParams({payload:JSON.stringify(p)});
+  return fetch(url,{method:'POST',mode:'no-cors',body});
+}
+async function flushQueue(){
+  if(!endpoint())return;
+  const q=getQueue();if(!q.length)return;
+  const rest=[];
+  for(const item of q){ try{ await postPayload(item);}catch(e){ rest.push(item);} }
+  setQueue(rest);
+  if(!rest.length) toast('Envíos pendientes sincronizados ✓');
+}
+window.addEventListener('online',flushQueue);
+
+async function sendToDrive(){
+  if(!validate()){toast('Corrige los errores antes de enviar');return;}
+  if(!endpoint()){
+    toast('Configura primero la URL del Web App (sección 9)');
+    const card=$('endpointUrl').closest('[data-card]');if(card)card.classList.remove('collapsed');
+    $('endpointUrl').scrollIntoView({behavior:'smooth',block:'center'});return;
+  }
+  const p=buildPayload();
+  $('status').textContent='Enviando…';
+  try{
+    await postPayload(p);
+    toast('Enviado a Drive ✓ ODS '+p['ODS']);
+    $('status').textContent='Enviado a Drive ✓ '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+  }catch(err){
+    const q=getQueue();q.push(p);setQueue(q);
+    toast('Sin conexión: guardado en cola, se enviará al reconectar');
+    $('status').textContent='En cola (sin conexión)';
+  }
+}
+$('btnEnviar').addEventListener('click',sendToDrive);
+$('btnFlush').addEventListener('click',flushQueue);
+$('btnAbrirEp').addEventListener('click',()=>{const u=endpoint();if(u)window.open(u,'_blank');else toast('Configura la URL primero');});
+updatePending();
+if(navigator.onLine) setTimeout(flushQueue,1500);
 
 // ---------- restore draft ----------
 (function restore(){
