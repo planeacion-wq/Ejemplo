@@ -9,13 +9,16 @@
  *   5. NUNCA toca tus columnas Estado ni Notas de filas existentes.
  *
  * INSTALACIÓN (una sola vez):
- *   a) Abre la hoja → Extensiones → Apps Script.
- *   b) Borra el contenido y pega este archivo completo.
- *   c) En el panel izquierdo: Servicios (+) → "YouTube Data API v3" → Añadir.
- *   d) Guarda. Ejecuta la función  sincronizarPlaylist  y autoriza los permisos.
+ *   a) Abre la hoja → menú Extensiones → Apps Script.
+ *   b) Borra lo que haya y pega este archivo completo.
+ *   c) Panel izquierdo: Servicios (+) → "YouTube Data API v3" → Añadir.
+ *   d) Guarda (icono del disquete).
  *
- * USO POSTERIOR: cada vez que agregues videos al playlist, vuelve a ejecutar
- * sincronizarPlaylist y la hoja se pone al día sola.
+ * USO: vuelve a la hoja y recárgala (F5). Aparecerá un menú nuevo arriba
+ * llamado "▶ Playlist IA". Haz clic en él → "Sincronizar ahora".
+ * La primera vez Google pedirá autorización (ver guía paso a paso).
+ *
+ * Cada vez que agregues videos al playlist, repite solo ese clic del menú.
  */
 
 // ---------- CONFIGURACIÓN ----------
@@ -35,13 +38,26 @@ var COL = {
   notas:  9   // I
 };
 
+/**
+ * Crea el menú "▶ Playlist IA" dentro de la hoja.
+ * Se ejecuta solo cada vez que abres el archivo.
+ */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('▶ Playlist IA')
+    .addItem('Sincronizar ahora', 'sincronizarPlaylist')
+    .addToUi();
+}
+
 // ---------- FUNCIÓN PRINCIPAL ----------
 function sincronizarPlaylist() {
   var hoja = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
   var idsPlaylist = obtenerVideosDePlaylist_(NOMBRE_PLAYLIST);
   if (!idsPlaylist.length) {
-    SpreadsheetApp.getUi().alert('No se encontró el playlist "' + NOMBRE_PLAYLIST + '" o está vacío.');
+    mostrarResumen_('No se encontró ningún playlist tuyo llamado "' + NOMBRE_PLAYLIST +
+                    '", o está vacío.\n\nRevisa que el nombre esté escrito igual ' +
+                    '(mayúsculas incluidas) en la línea NOMBRE_PLAYLIST del script.');
     return;
   }
 
@@ -135,18 +151,32 @@ function sincronizarPlaylist() {
 
   // --- Resumen ---
   var msg =
-    'Playlist "' + NOMBRE_PLAYLIST + '": ' + idsPlaylist.length + ' videos únicos.\n\n' +
-    '• Añadidos a la hoja: ' + nuevas.length + '\n' +
+    'LISTO. Playlist "' + NOMBRE_PLAYLIST + '": ' + idsPlaylist.length + ' videos únicos.\n\n' +
+    '• Videos añadidos a la hoja: ' + nuevas.length + '\n' +
     '• Títulos completados: ' + completados + '\n' +
     '• Duplicados marcados: ' + duplicados.length +
       (duplicados.length ? '\n    ' + duplicados.join('\n    ') : '') + '\n' +
     '• En la hoja pero NO en el playlist: ' + soloHoja.length + '\n' +
     '• Filas sin URL válida (revisar a mano): ' +
       (filasSinId.length ? filasSinId.join(', ') : 'ninguna');
-  SpreadsheetApp.getUi().alert(msg);
+  mostrarResumen_(msg);
 }
 
 // ---------- AUXILIARES ----------
+
+/**
+ * Muestra el resultado. Intenta una ventana emergente; si no se puede
+ * (por ejemplo al ejecutar desde el editor de código), lo deja en el
+ * registro de ejecución para que igual se pueda leer.
+ */
+function mostrarResumen_(texto) {
+  try {
+    SpreadsheetApp.getUi().alert(texto);
+  } catch (e) {
+    Logger.log(texto);
+  }
+  Logger.log(texto);
+}
 
 /** Devuelve los IDs de video (sin duplicados) del playlist con ese nombre. */
 function obtenerVideosDePlaylist_(nombre) {
